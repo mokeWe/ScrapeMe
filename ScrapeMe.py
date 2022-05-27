@@ -1,10 +1,8 @@
 import re
-import subprocess
 import urllib.request
 import os
 from bs4 import BeautifulSoup
 import requests
-import codecs
 import random
 
 # clear screen 
