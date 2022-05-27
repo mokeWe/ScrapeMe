@@ -44,7 +44,6 @@ headers = {'User-Agent': user_agent}
 def ping(webInput):
     try:
         response = urllib.request.urlopen(webInput)
-        # print website is up in light blue
         print("\033[94m" + webInput + " is up!")
         return True
     except urllib.request.URLError as e:
@@ -54,30 +53,27 @@ def ping(webInput):
 
 # if website returns ping, then continue
 if ping(webInput):
-    # print dark blue line 
     print("\033[93m" + "-" * len(webInput) + "\033[0m")
     
     # download raw HTML
     def get_html(webInput):
         try:
             r = requests.get(webInput, headers=headers)
-            # read raw HTML
             html = r.text
-            # delete all non utf-8 characters in html
             html = html.encode('ascii', 'ignore').decode('utf-8', 'ignore')
             return html
         except requests.exceptions.ConnectionError:
             return False
     rawText = get_html(webInput)
 
-    # put html to text file with random name
+    # write raw HTML to file
     def write_html(rawText):
-        # create random name for text file
-        randomName = str(random.randint(1, 999999999)) + ".txt"
+        randomName = str(random.randint(1, 999999999)) + "rawHTML.txt"
         # write raw HTML to text file
         with open(randomName, "w") as text_file:
             text_file.write(rawText)
         return randomName
+    write_html(rawText)
     
 
     # create email regex, find emails in text, print in red.
@@ -86,9 +82,7 @@ if ping(webInput):
     print("Possible emails found: " + "\033[1;31;40m" + str(emails) + "\033[0;37;40m")
     # write emails to file with random name
     def write_emails(emails):
-        # create random name for text file
         randomName = str(random.randint(1, 999999999)) + "emails.txt"
-        # write emails to text file
         with open(randomName, "w") as text_file:
             text_file.write(str(emails))
         return randomName
@@ -97,7 +91,6 @@ if ping(webInput):
 
 
     # Scan website for links using BeautifulSoup
-    # get all the links from the html data
     def get_links(rawText):
         soup = BeautifulSoup(rawText, 'html.parser')
         links = []
@@ -111,11 +104,8 @@ if ping(webInput):
 
     # write links to file with random name
     def write_links(links):
-        # create random name for text file
         randomName = str(random.randint(1, 999999999)) + "links.txt"
-        # write links to text file with links separated by newline
         with open(randomName, "w") as text_file:
-            # if links is not empty, write links to text file
             if links != None:
                 for link in links:
                     text_file.write(link + "\n")
@@ -131,11 +121,8 @@ if ping(webInput):
 
     # write phone numbers to file with random name, separated by newline
     def write_phones(phoneMatches):
-        # create random name for text file
         randomName = str(random.randint(1, 999999999)) + "phones.txt"
-        # write phone numbers to text file
         with open(randomName, "w") as text_file:
-            # if phoneMatches is not empty, write phone numbers to text file
             if phoneMatches != None:
                 for phone in phoneMatches:
                     text_file.write(phone + "\n")
@@ -143,7 +130,7 @@ if ping(webInput):
     # run write_phones function
     write_phones(phoneMatches)
 
-    # download https://www.usna.edu/Users/cs/roche/courses/s15si335/proj1/files.php%3Ff=names.txt&downloadcode=yes as names.txt if it doesnt already exist
+    # download names.txt if it doesnt already exist
     if not os.path.exists("names.txt"):
         urllib.request.urlretrieve("https://www.usna.edu/Users/cs/roche/courses/s15si335/proj1/files.php%3Ff=names.txt&downloadcode=yes", "names.txt")
         
@@ -161,11 +148,8 @@ if ping(webInput):
 
     # write names to file with random name, make each name on new line
     def write_names(nameMatches):
-        # create random name for text file
         randomName = str(random.randint(1, 999999999)) + "names.txt"
-        # write names to text file
         with open(randomName, "w") as text_file:
-            # if nameMatches is not empty, write names to text file
             if nameMatches != None:
                 for name in nameMatches:
                     text_file.write(name + "\n")
