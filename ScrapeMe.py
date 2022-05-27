@@ -11,9 +11,7 @@ def clear():
 clear()
 
 # print ascii art in red
-def print_red(text):
-    print("\033[91m" + text + "\033[0m")
-print_red("""
+print("""\033[91m 
   /$$$$$$                                                   /$$      /$$          
  /$$__  $$                                                 | $$$    /$$$          
 | $$  \__/  /$$$$$$$  /$$$$$$  /$$$$$$   /$$$$$$   /$$$$$$ | $$$$  /$$$$  /$$$$$$ 
@@ -26,7 +24,7 @@ print_red("""
                                        | $$                                       
                                        |__/                                       
 
-    """)
+    \033[0m""")
 
 # ask for user input
 webInput = input("Enter a website: ")
