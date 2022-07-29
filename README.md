@@ -2,7 +2,7 @@
 ## ScrapeMe
 Scrape websites for emails, phones, links, and names
 
-Some things are imperfect, if you can improve any of this dumpster fire feel free to open a PR
+Some things are imperfect (aka this entire thing sucks ass), if you can improve any of this dumpster fire feel free to open a PR
 
 ## Installation
 
