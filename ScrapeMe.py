@@ -9,13 +9,14 @@ import random
 
 
 def clear():
-    os.system('cls' if os.name == 'nt' else 'clear')
+    os.system("cls" if os.name == "nt" else "clear")
 
 
 clear()
 
 # print ascii art in red
-print("""\033[91m 
+print(
+    """\033[91m 
   /$$$$$$                                                   /$$      /$$          
  /$$__  $$                                                 | $$$    /$$$          
 | $$  \__/  /$$$$$$$  /$$$$$$  /$$$$$$   /$$$$$$   /$$$$$$ | $$$$  /$$$$  /$$$$$$ 
@@ -28,19 +29,20 @@ print("""\033[91m
                                        | $$                                       
                                        |__/                                       
 
-    \033[0m""")
+    \033[0m"""
+)
 
 
 webInput = input("Enter a website: ")
 
 # if website is invalid print error in red, continue
-if re.match(r'^(?:http|ftp)s?://', webInput) == None:
+if re.match(r"^(?:http|ftp)s?://", webInput) == None:
     print("\033[91m" + "Invalid website! (put http:// or https:// in front of the URL)" + "\033[0m")
     input("Press any key to continue...")
     exit()
 
-user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
-headers = {'User-Agent': user_agent}
+user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36"
+headers = {"User-Agent": user_agent}
 
 
 def ping(webInput):
@@ -50,8 +52,7 @@ def ping(webInput):
         return True
     except urllib.request.URLError as e:
         # fake a useragent
-        print("\033[94m" + webInput +
-              " is down, invalid, or errored in another way!")
+        print("\033[94m" + webInput + " is down, invalid, or errored in another way!")
         return False
 
 
@@ -63,43 +64,43 @@ if ping(webInput):
         try:
             r = requests.get(webInput, headers=headers)
             html = r.text
-            html = html.encode('ascii', 'ignore').decode('utf-8', 'ignore')
+            html = html.encode("ascii", "ignore").decode("utf-8", "ignore")
             return html
         except requests.exceptions.ConnectionError:
             return False
+
     rawText = get_html(webInput)
 
     # create email regex
-    emailRegex = re.compile(r'[\w\.-]+@[\w\.-]+')
+    emailRegex = re.compile(r"[\w\.-]+@[\w\.-]+")
     emails = re.findall(emailRegex, rawText)
-    print("Possible emails found: " +
-          "\033[1;31;40m" + str(emails) + "\033[0;37;40m")
+    print("Possible emails found: " + "\033[1;31;40m" + str(emails) + "\033[0;37;40m")
 
     # get links
     def get_links(rawText):
-        soup = BeautifulSoup(rawText, 'html.parser')
-        return [link.get('href') for link in soup.find_all('a') if link.get('href') is not None]
-    print("Amount of links found: " +
-          "\033[1;31;40m" + str(len(get_links(rawText))) + "\033[0;37;40m")
+        soup = BeautifulSoup(rawText, "html.parser")
+        return [link.get("href") for link in soup.find_all("a") if link.get("href") is not None]
+
+    print("Amount of links found: " + "\033[1;31;40m" + str(len(get_links(rawText))) + "\033[0;37;40m")
 
     # make regex for phones
-    phoneRegex = re.compile(r'\d\d\d-\d\d\d-\d\d\d\d')
+    phoneRegex = re.compile(r"\d\d\d-\d\d\d-\d\d\d\d")
     phoneMatches = phoneRegex.findall(rawText)
-    print("Possible phone numbers found: " +
-          "\033[92m" + str(phoneMatches) + "\033[0m")
+    print("Possible phone numbers found: " + "\033[92m" + str(phoneMatches) + "\033[0m")
 
     # download names.txt
     if not os.path.exists("names.txt"):
         urllib.request.urlretrieve(
-            "https://www.usna.edu/Users/cs/roche/courses/s15si335/proj1/files.php%3Ff=names.txt&downloadcode=yes", "names.txt")
+            "https://www.usna.edu/Users/cs/roche/courses/s15si335/proj1/files.php%3Ff=names.txt&downloadcode=yes",
+            "names.txt",
+        )
 
     # find names
     with open("names.txt", "r") as f:
         names = f.readlines()
     names = [x.strip() for x in names]
     nameMatches = [name for name in names if name in rawText]
-    print("Possible names found: " +
-          "\033[1;31;40m" + str(len(nameMatches)) + "\033[0;37;40m")
+    print("Possible names found: " + "\033[1;31;40m" + str(len(nameMatches)) + "\033[0;37;40m")
 
     def write_to_file(data, file_name):
         random_name = str(random.randint(1, 999999999)) + file_name
