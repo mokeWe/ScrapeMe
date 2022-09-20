@@ -1,27 +1,39 @@
 
-<h1  align="center">ScrapeMe</h1>
+  
 
+<h1  align="center">ScrapeMe</h1>
 <p  align="center">
 <img  src="https://img.shields.io/badge/made%20with-python-red?style=for-the-badge&logo=python"/>
 </p>
 
+  
+
 ## About
+
+  
 
 A simple GUI application to scrape websites using BeautifulSoup4.
 
-## Installation
+  
 
-Python 3.9 or above is recomended.
+## Installation
+Python 3.9 or above is recommended.
 
 Install the necessary requirements via pip
-
 ```bash
-
 pip install -r requirements.txt
-
 ```
 
-Double click `ScrapeMe.py` or run via the command line.
+Double click `ScrapeMe.py` or run via the command line,
+```bash
+python3 ScrapeMe.py
+```
+
+## Features
+
+ - PyQt6 GUI
+ - Scrape for links, images, emails, & phones
+ - Settings system
 
 ## Screenshots
 
