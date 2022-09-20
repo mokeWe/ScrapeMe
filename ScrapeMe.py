@@ -1,123 +1,193 @@
-import re
-import urllib.request
-import os
-from bs4 import BeautifulSoup
-import requests
-import random
-
-# clear screen
-
-
-def clear():
-    os.system("cls" if os.name == "nt" else "clear")
-
-
-clear()
-
-# print ascii art in red
-print(
-    """\033[91m 
-  /$$$$$$                                                   /$$      /$$          
- /$$__  $$                                                 | $$$    /$$$          
-| $$  \__/  /$$$$$$$  /$$$$$$  /$$$$$$   /$$$$$$   /$$$$$$ | $$$$  /$$$$  /$$$$$$ 
-|  $$$$$$  /$$_____/ /$$__  $$|____  $$ /$$__  $$ /$$__  $$| $$ $$/$$ $$ /$$__  $$
- \____  $$| $$      | $$  \__/ /$$$$$$$| $$  \ $$| $$$$$$$$| $$  $$$| $$| $$$$$$$$
- /$$  \ $$| $$      | $$      /$$__  $$| $$  | $$| $$_____/| $$\  $ | $$| $$_____/
-|  $$$$$$/|  $$$$$$$| $$     |  $$$$$$$| $$$$$$$/|  $$$$$$$| $$ \/  | $$|  $$$$$$$
- \______/  \_______/|__/      \_______/| $$____/  \_______/|__/     |__/ \_______/
-                                       | $$                                       
-                                       | $$                                       
-                                       |__/                                       
-
-    \033[0m"""
+import sys
+from PyQt6.QtWidgets import (
+    QApplication,
+    QWidget,
+    QPushButton,
+    QLabel,
+    QLineEdit,
+    QGridLayout,
+    QMessageBox,
+    QTabWidget,
+    QVBoxLayout,
+    QCheckBox,
+    QPlainTextEdit,
 )
+from PyQt6.QtCore import QCoreApplication
+from funcs import cog
+import json
+import qdarktheme
 
 
-webInput = input("Enter a website: ")
+class App(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
 
-# if website is invalid print error in red, continue
-if re.match(r"^(?:http|ftp)s?://", webInput) == None:
-    print("\033[91m" + "Invalid website! (put http:// or https:// in front of the URL)" + "\033[0m")
-    input("Press any key to continue...")
-    exit()
+    def initUI(self):
+        self.setWindowTitle("ScrapeMe")
+        self.resize(500, 400)
 
-user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36"
-headers = {"User-Agent": user_agent}
+        # Tabs
+        tabWidget = QTabWidget()
+        tabWidget.addTab(Tab1(), "Scraper")
+        tabWidget.addTab(Tab2(), "Settings")
 
+        # Layout
+        mainLayout = QVBoxLayout()
+        mainLayout.addWidget(tabWidget)
+        self.setLayout(mainLayout)
 
-def ping(webInput):
-    try:
-        response = urllib.request.urlopen(webInput)
-        print("\033[94m" + webInput + " is up!")
-        return True
-    except urllib.request.URLError as e:
-        # fake a useragent
-        print("\033[94m" + webInput + " is down, invalid, or errored in another way!")
-        return False
+        self.show()
 
 
-if ping(webInput):
-    print("\033[93m" + "-" * len(webInput) + "\033[0m")
+class Tab1(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
 
-    # download raw HTML
-    def get_html(webInput):
+    def initUI(self):
+
+        # Widgets
+        self.urlLabel = QLabel("Enter URL:")
+        self.resultsLabel = QLabel("Results:")
+        self.textbox = QLineEdit(self)
+        self.resultsBox = QPlainTextEdit(self)
+        self.resultsBox.setReadOnly(True)
+        self.scrapeButton = QPushButton("Scrape", self)
+        self.exitButton = QPushButton("Exit", self)
+
+        # Stylesheets
+        self.resultsBox.setStyleSheet("font-family: monospace;")
+        self.scrapeButton.setStyleSheet("font-weight: bold;")
+        self.exitButton.setStyleSheet("color: #eb4334")
+
+        # Layout
+        grid = QGridLayout()
+        grid.setSpacing(10)
+        grid.addWidget(self.urlLabel, 1, 0)
+        grid.addWidget(self.textbox, 1, 1)
+        grid.addWidget(self.scrapeButton, 1, 2)
+        grid.addWidget(self.exitButton, 4, 1)
+        grid.addWidget(self.resultsLabel, 3, 0)
+        grid.addWidget(self.resultsBox, 3, 1)
+
+        self.setLayout(grid)
+
+        # Signals
+        self.scrapeButton.clicked.connect(self.scrape)
+        self.exitButton.clicked.connect(self.exit)
+
+    def scrape(self):
+        self.resultsBox.clear()
+
+        with open("settings.json", "r") as f:
+            settings = json.load(f)
+
+        url = self.textbox.text()
+        if cog.ping(url):
+
+            rawText = cog.get_html(url)
+            links = cog.get_links(rawText)
+            images = cog.get_images(rawText)
+            phones = cog.get_phones(rawText)
+            emails = cog.get_emails(rawText)
+
+            for key, value in settings.items():
+                if value:
+                    self.resultsBox.appendPlainText(key.capitalize() + ":")
+                    self.resultsBox.appendPlainText(str(len(locals()[key])))
+
+                    if len(locals()[key]) > 0:
+                        cog.write_to_file(locals()[key], key)
+                        self.resultsBox.appendPlainText("Saved to " + key + ".txt")
+
+        else:
+            self.resultsBox.appendPlainText("Invalid URL")
+
+    def exit(self):
+        reply = QMessageBox.question(
+            self,
+            "Hey!",
+            "Are you sure you want to exit?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            QCoreApplication.quit()
+
+
+class Tab2(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    # Check if settings.json exists
+    def check_settings():
         try:
-            r = requests.get(webInput, headers=headers)
-            html = r.text
-            html = html.encode("ascii", "ignore").decode("utf-8", "ignore")
-            return html
-        except requests.exceptions.ConnectionError:
-            return False
+            with open("settings.json", "r") as f:
+                json.load(f)
+        except FileNotFoundError:
+            with open("settings.json", "w") as f:
+                json.dump(
+                    {"image": True, "link": True, "email": True, "phone": True}, f
+                )
 
-    rawText = get_html(webInput)
+    check_settings()
 
-    # create email regex
-    emailRegex = re.compile(r"[\w\.-]+@[\w\.-]+")
-    emails = re.findall(emailRegex, rawText)
-    print("Possible emails found: " + "\033[1;31;40m" + str(emails) + "\033[0;37;40m")
+    # Definitely not the best way to do this
+    def loadSettings(self):
+        with open("settings.json", "r") as f:
+            settings = json.load(f)
+        for key, value in settings.items():
+            getattr(self, key + "Box").setChecked(value)
 
-    # get links
-    def get_links(rawText):
-        soup = BeautifulSoup(rawText, "html.parser")
-        return [link.get("href") for link in soup.find_all("a") if link.get("href") is not None]
+    def initUI(self):
 
-    print("Amount of links found: " + "\033[1;31;40m" + str(len(get_links(rawText))) + "\033[0;37;40m")
+        # Widgets
+        self.linkBox = QCheckBox("Srape links")
+        self.imageBox = QCheckBox("Srape images")
+        self.emailBox = QCheckBox("Scrape emails")
+        self.phoneBox = QCheckBox("Scrape phone numbers")
+        self.saveButton = QPushButton("Save", self)
+        self.aboutButton = QPushButton("About", self)
 
-    # make regex for phones
-    phoneRegex = re.compile(r"\d\d\d-\d\d\d-\d\d\d\d")
-    phoneMatches = phoneRegex.findall(rawText)
-    print("Possible phone numbers found: " + "\033[92m" + str(phoneMatches) + "\033[0m")
+        # Load settings
+        self.loadSettings()
 
-    # download names.txt
-    if not os.path.exists("names.txt"):
-        urllib.request.urlretrieve(
-            "https://www.usna.edu/Users/cs/roche/courses/s15si335/proj1/files.php%3Ff=names.txt&downloadcode=yes",
-            "names.txt",
+        # Signals
+        self.saveButton.clicked.connect(self.save_settings)
+        self.aboutButton.clicked.connect(self.about)
+
+        # Layout
+        layout = QGridLayout()
+        layout.setSizeConstraint(QGridLayout.SizeConstraint.SetFixedSize)
+        layout.addWidget(self.linkBox, 0, 0)
+        layout.addWidget(self.imageBox, 1, 0)
+        layout.addWidget(self.emailBox, 2, 0)
+        layout.addWidget(self.phoneBox, 3, 0)
+        layout.addWidget(self.saveButton, 4, 0)
+        layout.addWidget(self.aboutButton, 4, 1)
+        self.setLayout(layout)
+
+    def save_settings(boxes):
+        checkbox_values = {
+            "image": boxes.imageBox.isChecked(),
+            "link": boxes.linkBox.isChecked(),
+            "email": boxes.emailBox.isChecked(),
+            "phone": boxes.phoneBox.isChecked(),
+        }
+        with open("settings.json", "w") as f:
+            json.dump(checkbox_values, f)
+
+    def about(self):
+        QMessageBox.about(
+            self,
+            "ScrapeMe v1.1",
+            "A basic web scraper made with Python and PyQt5.\n\nhttps://github.com/mokeWe/ScrapeMe",
         )
 
-    # find names
-    with open("names.txt", "r") as f:
-        names = f.readlines()
-    names = [x.strip() for x in names]
-    nameMatches = [name for name in names if name in rawText]
-    print("Possible names found: " + "\033[1;31;40m" + str(len(nameMatches)) + "\033[0;37;40m")
 
-    def write_to_file(data, file_name):
-        random_name = str(random.randint(1, 999999999)) + file_name
-        with open(random_name, "w") as text_file:
-            if data != None:
-                for item in data:
-                    text_file.write(item + "\n")
-        return random_name
-
-    write_to_file(get_links(rawText), "links.txt")
-    write_to_file(phoneMatches, "phones.txt")
-    write_to_file(emails, "emails.txt")
-    write_to_file(rawText, "raw.txt")
-    write_to_file(nameMatches, "names.txt")
-
-    input("\033[95m" + "Finished! Exported all data to their respective text files. Press enter to exit..." + "\033[0m")
-
-else:
-    input("\033[91m" + "Press enter to exit..." + "\033[0m")
-    exit()
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    app.setStyleSheet(qdarktheme.load_stylesheet())
+    ex = App()
+    sys.exit(app.exec())

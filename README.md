@@ -1,21 +1,29 @@
 
-## ScrapeMe
-Scrape websites for emails, phones, links, and names
+<h1  align="center">ScrapeMe</h1>
 
-Some things are imperfect (aka this entire thing sucks ass), if you can improve any of this dumpster fire feel free to open a PR
+<p  align="center">
+<img  src="https://img.shields.io/badge/made%20with-python-red?style=for-the-badge&logo=python"/>
+</p>
+
+## About
+
+A simple GUI application to scrape websites using BeautifulSoup4.
 
 ## Installation
 
-Install requirements via pip
+Python 3.9 or above is recomended.
+
+Install the necessary requirements via pip
 
 ```bash
-  pip install -r requirements.txt
-```
-Run ScrapeMe.py or run via the command line.
 
-    
+pip install -r requirements.txt
+
+```
+
+Double click `ScrapeMe.py` or run via the command line.
+
 ## Screenshots
 
-![App Screenshot](https://bean.forsale/4nuWwmog8J.png?key=lFGT2rZpuXmBqx)
-![App Screenshot](https://bean.forsale/nyXV5HmK8p.png?key=GybPm2mtWox6OJ)
-
+![Settings](screenshots/2022-09-19_22-37_1.png)
+![Main tab](screenshots/2022-09-19_22-38.png)
