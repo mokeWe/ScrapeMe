@@ -12,10 +12,11 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QPlainTextEdit,
 )
-from PyQt6.QtCore import QCoreApplication
+from PyQt6.QtCore import QCoreApplication, QThread
 from funcs import cog
 import json
 import qdarktheme
+import threading
 
 
 class App(QWidget):
@@ -84,13 +85,13 @@ class Tab1(QWidget):
             settings = json.load(f)
 
         url = self.textbox.text()
-        if cog.ping(url):
+        if cog.Cog.ping(url):
 
-            rawText = cog.get_html(url)
-            links = cog.get_links(rawText)
-            images = cog.get_images(rawText)
-            phones = cog.get_phones(rawText)
-            emails = cog.get_emails(rawText)
+            rawText = cog.Cog.get_html(url)
+            link = cog.Cog.get_links(rawText)
+            image = cog.Cog.get_images(rawText)
+            phone = cog.Cog.get_phones(rawText)
+            email = cog.Cog.get_emails(rawText)
 
             for key, value in settings.items():
                 if value:
@@ -98,8 +99,8 @@ class Tab1(QWidget):
                     self.resultsBox.appendPlainText(str(len(locals()[key])))
 
                     if len(locals()[key]) > 0:
-                        cog.write_to_file(locals()[key], key)
-                        self.resultsBox.appendPlainText("Saved to " + key + ".txt")
+                        cog.Cog.write_to_file(locals()[key], key)
+                        self.resultsBox.appendPlainText("Saved!")
 
         else:
             self.resultsBox.appendPlainText("Invalid URL")
