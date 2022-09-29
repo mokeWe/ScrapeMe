@@ -86,15 +86,10 @@ class Tab1(QWidget):
 
         url = self.textbox.text()
         if cog.Cog.ping(url):
-
             rawText = cog.Cog.get_html(url)
-            link = cog.Cog.get_links(rawText)
-            image = cog.Cog.get_images(rawText)
-            phone = cog.Cog.get_phones(rawText)
-            email = cog.Cog.get_emails(rawText)
-
             for key, value in settings.items():
                 if value:
+                    locals()[key] = getattr(cog.Cog, "get_" + key)(rawText)
                     self.resultsBox.appendPlainText(key.capitalize() + ":")
                     self.resultsBox.appendPlainText(str(len(locals()[key])))
 
@@ -129,7 +124,7 @@ class Tab2(QWidget):
         except FileNotFoundError:
             with open("settings.json", "w") as f:
                 json.dump(
-                    {"image": True, "link": True, "email": True, "phone": True}, f
+                    {"images": True, "links": True, "emails": True, "phones": True}, f
                 )
 
     check_settings()
@@ -144,10 +139,10 @@ class Tab2(QWidget):
     def initUI(self):
 
         # Widgets
-        self.linkBox = QCheckBox("Srape links")
-        self.imageBox = QCheckBox("Srape images")
-        self.emailBox = QCheckBox("Scrape emails")
-        self.phoneBox = QCheckBox("Scrape phone numbers")
+        self.linksBox = QCheckBox("Srape links")
+        self.imagesBox = QCheckBox("Srape images")
+        self.emailsBox = QCheckBox("Scrape emails")
+        self.phonesBox = QCheckBox("Scrape phone numbers")
         self.saveButton = QPushButton("Save", self)
         self.aboutButton = QPushButton("About", self)
 
@@ -161,20 +156,20 @@ class Tab2(QWidget):
         # Layout
         layout = QGridLayout()
         layout.setSizeConstraint(QGridLayout.SizeConstraint.SetFixedSize)
-        layout.addWidget(self.linkBox, 0, 0)
-        layout.addWidget(self.imageBox, 1, 0)
-        layout.addWidget(self.emailBox, 2, 0)
-        layout.addWidget(self.phoneBox, 3, 0)
+        layout.addWidget(self.linksBox, 0, 0)
+        layout.addWidget(self.imagesBox, 1, 0)
+        layout.addWidget(self.emailsBox, 2, 0)
+        layout.addWidget(self.phonesBox, 3, 0)
         layout.addWidget(self.saveButton, 4, 0)
         layout.addWidget(self.aboutButton, 4, 1)
         self.setLayout(layout)
 
     def save_settings(boxes):
         checkbox_values = {
-            "image": boxes.imageBox.isChecked(),
-            "link": boxes.linkBox.isChecked(),
-            "email": boxes.emailBox.isChecked(),
-            "phone": boxes.phoneBox.isChecked(),
+            "images": boxes.imagesBox.isChecked(),
+            "links": boxes.linksBox.isChecked(),
+            "emails": boxes.emailsBox.isChecked(),
+            "phones": boxes.phonesBox.isChecked(),
         }
         with open("settings.json", "w") as f:
             json.dump(checkbox_values, f)
