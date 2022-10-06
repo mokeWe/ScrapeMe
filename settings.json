@@ -1,1 +1,1 @@
-{"images": true, "links": false, "emails": false, "phones": false}
+{"images": true, "links": true, "emails": true, "phones": true}

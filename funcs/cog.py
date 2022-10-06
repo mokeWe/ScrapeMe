@@ -4,23 +4,24 @@ from bs4 import BeautifulSoup
 import requests
 import random
 import os
-import threading
 
 
 class Cog:
-    def __init__(self):
-        pass
-
-    # Ping function
     def ping(url):
+        if not url.startswith("http://") and not url.startswith("https://"):
+            url = "http://" + url
+
         try:
-            response = urllib.request.urlopen(url)
+            urllib.request.urlopen(url)
             return True
         except urllib.request.URLError as e:
             return False
 
     # Get HTML
     def get_html(url):
+        if not url.startswith("http://") and not url.startswith("https://"):
+            url = "http://" + url
+
         r = requests.get(url)
         html = r.text
         html = html.encode("ascii", "ignore").decode("utf-8", "ignore")
@@ -63,8 +64,13 @@ class Cog:
     # Write data to files.
     def write_to_file(data, file_name):
         random_name = str(random.randint(1, 100)) + "_" + file_name
-        with open(random_name, "w") as text_file:
+
+        if not os.path.exists("results"):
+            os.makedirs("results")
+
+        with open("results/" + random_name, "w") as text_file:
             if data != None:
                 for item in data:
                     text_file.write(str(item) + "\n")
+
         return random_name

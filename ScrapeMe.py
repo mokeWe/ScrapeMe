@@ -95,10 +95,12 @@ class Tab1(QWidget):
 
                     if len(locals()[key]) > 0:
                         cog.Cog.write_to_file(locals()[key], key)
-                        self.resultsBox.appendPlainText("Saved!")
+                        self.resultsBox.appendPlainText("Saved!\n")
+                    else:
+                        self.resultsBox.appendPlainText("Nothing to save.\n")
 
         else:
-            self.resultsBox.appendPlainText("Invalid URL")
+            self.resultsBox.appendPlainText("Error: Invalid URL")
 
     def exit(self):
         reply = QMessageBox.question(
