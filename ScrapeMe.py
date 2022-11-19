@@ -12,11 +12,10 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QPlainTextEdit,
 )
-from PyQt6.QtCore import QCoreApplication, QThread
+from PyQt6.QtCore import QCoreApplication
 from funcs import cog
-import json
+from configparser import ConfigParser
 import qdarktheme
-import threading
 
 
 class App(QWidget):
@@ -65,13 +64,13 @@ class Tab1(QWidget):
         # Layout
         grid = QGridLayout()
         grid.setSpacing(10)
-        grid.addWidget(self.urlLabel, 1, 0)
-        grid.addWidget(self.textbox, 1, 1)
-        grid.addWidget(self.scrapeButton, 1, 2)
-        grid.addWidget(self.exitButton, 4, 1)
-        grid.addWidget(self.resultsLabel, 3, 0)
-        grid.addWidget(self.resultsBox, 3, 1)
-
+        gaw = lambda w, r, c: grid.addWidget(w, r, c)
+        gaw(self.urlLabel, 1, 0)
+        gaw(self.textbox, 1, 1)
+        gaw(self.scrapeButton, 1, 2)
+        gaw(self.exitButton, 4, 1)
+        gaw(self.resultsLabel, 3, 0)
+        gaw(self.resultsBox, 3, 1)
         self.setLayout(grid)
 
         # Signals
@@ -81,24 +80,25 @@ class Tab1(QWidget):
     def scrape(self):
         self.resultsBox.clear()
 
-        with open("settings.json", "r") as f:
-            settings = json.load(f)
+        settings = ConfigParser()
+        settings.read("settings.ini")
 
         url = self.textbox.text()
         if cog.Cog.ping(url):
             rawText = cog.Cog.get_html(url)
-            for key, value in settings.items():
-                if value:
-                    locals()[key] = getattr(cog.Cog, "get_" + key)(rawText)
-                    self.resultsBox.appendPlainText(key.capitalize() + ":")
-                    self.resultsBox.appendPlainText(str(len(locals()[key])))
 
-                    if len(locals()[key]) > 0:
-                        cog.Cog.write_to_file(locals()[key], key)
+            for setting in settings["settings"]:
+                if settings.getboolean("settings", setting):
+                    locals()[setting] = getattr(cog.Cog, "get_" + setting)(rawText)
+                    lenset = locals()[setting]
+                    self.resultsBox.appendPlainText(setting.capitalize() + ":")
+                    self.resultsBox.appendPlainText(str(len(lenset)))
+
+                    if len(lenset) > 0:
+                        cog.Cog.write_to_file(lenset, setting)
                         self.resultsBox.appendPlainText("Saved!\n")
                     else:
                         self.resultsBox.appendPlainText("Nothing to save.\n")
-
         else:
             self.resultsBox.appendPlainText("Error: Invalid URL")
 
@@ -109,6 +109,7 @@ class Tab1(QWidget):
             "Are you sure you want to exit?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
+
         if reply == QMessageBox.StandardButton.Yes:
             QCoreApplication.quit()
 
@@ -118,25 +119,37 @@ class Tab2(QWidget):
         super().__init__()
         self.initUI()
 
-    # Check if settings.json exists
     def check_settings():
-        try:
-            with open("settings.json", "r") as f:
-                json.load(f)
-        except FileNotFoundError:
-            with open("settings.json", "w") as f:
-                json.dump(
-                    {"images": True, "links": True, "emails": True, "phones": True}, f
-                )
+        config = ConfigParser()
+        config.read("settings.ini")
+        if not config.has_section("settings"):
+            config.add_section("settings")
+            config.set("settings", "links", "True")
+            config.set("settings", "images", "True")
+            config.set("settings", "emails", "True")
+            config.set("settings", "phones", "True")
+            with open("settings.ini", "w") as f:
+                config.write(f)
 
     check_settings()
 
-    # Definitely not the best way to do this
+    def saveSettings(self):
+        config = ConfigParser()
+        config.read("settings.ini")
+        config.set("settings", "links", str(self.linksBox.isChecked()))
+        config.set("settings", "images", str(self.imagesBox.isChecked()))
+        config.set("settings", "emails", str(self.emailsBox.isChecked()))
+        config.set("settings", "phones", str(self.phonesBox.isChecked()))
+        with open("settings.ini", "w") as f:
+            config.write(f)
+
     def loadSettings(self):
-        with open("settings.json", "r") as f:
-            settings = json.load(f)
-        for key, value in settings.items():
-            getattr(self, key + "Box").setChecked(value)
+        config = ConfigParser()
+        config.read("settings.ini")
+        self.linksBox.setChecked(config.getboolean("settings", "links"))
+        self.imagesBox.setChecked(config.getboolean("settings", "images"))
+        self.emailsBox.setChecked(config.getboolean("settings", "emails"))
+        self.phonesBox.setChecked(config.getboolean("settings", "phones"))
 
     def initUI(self):
 
@@ -152,34 +165,24 @@ class Tab2(QWidget):
         self.loadSettings()
 
         # Signals
-        self.saveButton.clicked.connect(self.save_settings)
+        self.saveButton.clicked.connect(self.saveSettings)
         self.aboutButton.clicked.connect(self.about)
 
         # Layout
         layout = QGridLayout()
-        layout.setSizeConstraint(QGridLayout.SizeConstraint.SetFixedSize)
-        layout.addWidget(self.linksBox, 0, 0)
-        layout.addWidget(self.imagesBox, 1, 0)
-        layout.addWidget(self.emailsBox, 2, 0)
-        layout.addWidget(self.phonesBox, 3, 0)
-        layout.addWidget(self.saveButton, 4, 0)
-        layout.addWidget(self.aboutButton, 4, 1)
+        law = lambda w, r, c: layout.addWidget(w, r, c)
+        law(self.linksBox, 0, 0)
+        law(self.imagesBox, 1, 0)
+        law(self.emailsBox, 2, 0)
+        law(self.phonesBox, 3, 0)
+        law(self.saveButton, 4, 0)
+        law(self.aboutButton, 4, 1)
         self.setLayout(layout)
-
-    def save_settings(boxes):
-        checkbox_values = {
-            "images": boxes.imagesBox.isChecked(),
-            "links": boxes.linksBox.isChecked(),
-            "emails": boxes.emailsBox.isChecked(),
-            "phones": boxes.phonesBox.isChecked(),
-        }
-        with open("settings.json", "w") as f:
-            json.dump(checkbox_values, f)
 
     def about(self):
         QMessageBox.about(
             self,
-            "ScrapeMe v1.1",
+            "ScrapeMe",
             "A basic web scraper made with Python and PyQt5.\n\nhttps://github.com/mokeWe/ScrapeMe",
         )
 

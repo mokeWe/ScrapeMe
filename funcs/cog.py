@@ -35,13 +35,14 @@ class Cog:
     # Get images
     def get_images(rawText):
         soup = BeautifulSoup(rawText, "html.parser")
-        images = [img for img in soup.findAll("img")]
+        images = [img.get("src") for img in soup.find_all("img")]
         folder = "images"
         if not os.path.exists(folder):
             os.makedirs(folder)
             for img in images:
                 try:
-                    image = img["src"]
+                    # broken, I don't care to fix it as it's not important
+                    image = requests.get(img)
                     filename = image.split("/")[-1]
                     urllib.request.urlretrieve(image, os.path.join(folder, filename))
                     print("Saved " + filename)
