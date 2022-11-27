@@ -6,6 +6,9 @@ import random
 import os
 
 
+# TODO: multithreading
+
+
 class Cog:
     def ping(url):
         if not url.startswith("http://") and not url.startswith("https://"):
@@ -39,15 +42,14 @@ class Cog:
         folder = "images"
         if not os.path.exists(folder):
             os.makedirs(folder)
-            for img in images:
-                try:
-                    # broken, I don't care to fix it as it's not important
-                    image = requests.get(img)
-                    filename = image.split("/")[-1]
-                    urllib.request.urlretrieve(image, os.path.join(folder, filename))
-                    print("Saved " + filename)
-                except:
-                    print("Failed to save " + filename)
+        for img in images:
+            try:
+                urllib.request.urlretrieve(
+                    img, os.path.join(folder, os.path.basename(img))
+                )
+                print("Downloaded: " + img)
+            except Exception as e:
+                print("Failed to save image: " + str(e))
         return images
 
     # Get phones
