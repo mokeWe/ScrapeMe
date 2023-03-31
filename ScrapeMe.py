@@ -46,7 +46,6 @@ class Tab1(QWidget):
         self.initUI()
 
     def initUI(self):
-
         # Widgets
         self.urlLabel = QLabel("Enter URL:")
         self.resultsLabel = QLabel("Results:")
@@ -79,18 +78,15 @@ class Tab1(QWidget):
 
     def scrape(self):
         self.resultsBox.clear()
-
         settings = ConfigParser()
         settings.read("settings.ini")
-
         url = self.textbox.text()
+
         if cog.Cog.ping(url):
             rawText = cog.Cog.get_html(url)
-
             for setting in settings["settings"]:
                 if settings.getboolean("settings", setting):
-                    locals()[setting] = getattr(cog.Cog, "get_" + setting)(rawText)
-                    lenset = locals()[setting]
+                    lenset = getattr(cog.Cog, "get_" + setting)(rawText)
                     self.resultsBox.appendPlainText(setting.capitalize() + ":")
                     self.resultsBox.appendPlainText(str(len(lenset)))
 
@@ -130,6 +126,9 @@ class Tab2(QWidget):
             config.set("settings", "phones", "True")
             with open("settings.ini", "w") as f:
                 config.write(f)
+            print("settings.ini created")
+        else:
+            print("settings.ini exists")
 
     check_settings()
 
@@ -152,7 +151,6 @@ class Tab2(QWidget):
         self.phonesBox.setChecked(config.getboolean("settings", "phones"))
 
     def initUI(self):
-
         # Widgets
         self.linksBox = QCheckBox("Srape links")
         self.imagesBox = QCheckBox("Srape images")
