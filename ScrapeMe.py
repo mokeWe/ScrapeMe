@@ -115,40 +115,38 @@ class Tab2(QWidget):
         super().__init__()
         self.initUI()
 
-    def check_settings():
-        config = ConfigParser()
-        config.read("settings.ini")
-        if not config.has_section("settings"):
-            config.add_section("settings")
-            config.set("settings", "links", "True")
-            config.set("settings", "images", "True")
-            config.set("settings", "emails", "True")
-            config.set("settings", "phones", "True")
-            with open("settings.ini", "w") as f:
-                config.write(f)
-            print("settings.ini created")
-        else:
-            print("settings.ini exists")
-
-    check_settings()
+    @staticmethod
+    def update_config(config, settings_dict):
+        for key, value in settings_dict.items():
+            config.set("settings", key, str(value))
 
     def saveSettings(self):
         config = ConfigParser()
         config.read("settings.ini")
-        config.set("settings", "links", str(self.linksBox.isChecked()))
-        config.set("settings", "images", str(self.imagesBox.isChecked()))
-        config.set("settings", "emails", str(self.emailsBox.isChecked()))
-        config.set("settings", "phones", str(self.phonesBox.isChecked()))
+        settings_dict = {
+            "links": self.linksBox.isChecked(),
+            "images": self.imagesBox.isChecked(),
+            "emails": self.emailsBox.isChecked(),
+            "phones": self.phonesBox.isChecked(),
+        }
+        Tab2.update_config(config, settings_dict)
         with open("settings.ini", "w") as f:
             config.write(f)
 
     def loadSettings(self):
         config = ConfigParser()
         config.read("settings.ini")
-        self.linksBox.setChecked(config.getboolean("settings", "links"))
-        self.imagesBox.setChecked(config.getboolean("settings", "images"))
-        self.emailsBox.setChecked(config.getboolean("settings", "emails"))
-        self.phonesBox.setChecked(config.getboolean("settings", "phones"))
+        settings_dict = {
+            "links": config.getboolean("settings", "links"),
+            "images": config.getboolean("settings", "images"),
+            "emails": config.getboolean("settings", "emails"),
+            "phones": config.getboolean("settings", "phones"),
+        }
+        Tab2.update_config(config, settings_dict)
+        self.linksBox.setChecked(settings_dict["links"])
+        self.imagesBox.setChecked(settings_dict["images"])
+        self.emailsBox.setChecked(settings_dict["emails"])
+        self.phonesBox.setChecked(settings_dict["phones"])
 
     def initUI(self):
         # Widgets

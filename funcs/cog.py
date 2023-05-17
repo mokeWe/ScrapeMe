@@ -1,80 +1,51 @@
+import os
+import random
 import re
 import urllib.request
-from bs4 import BeautifulSoup
-import requests
-import random
-import os
 
 
-# TODO: multithreading
+def download_images(img_urls, folder):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
 
-
-class Cog:
-    def ping(url):
-        if not url.startswith("http://") and not url.startswith("https://"):
-            url = "http://" + url
+    images = []
+    for img_url in img_urls:
         try:
-            return urllib.request.urlopen(url).read()
+            filename = os.path.basename(img_url)
+            filepath = os.path.join(folder, filename)
+            urllib.request.urlretrieve(img_url, filepath)
+            print(f"Downloaded: {img_url}")
+            images.append(filepath)
         except Exception as e:
-            return str(e)
+            print(f"Failed to save image: {e}")
+    print("Recieved images")
+    return images
 
-    # Get HTML
-    def get_html(url):
-        # Check for valid URL
-        if not url.startswith("http://") and not url.startswith("https://"):
-            url = "http://" + url
 
-        # Get HTML
-        r = requests.get(url)
-        html = r.text
-        html = html.encode("ascii", "ignore").decode("utf-8", "ignore")
-        return html
+def get_phones(text_with_contact_info):
+    phone_regex = re.compile(r"((\s|-|\.)?(\d{3})(\s|-|\.)?(\d{4}))")
+    return phone_regex.findall(text_with_contact_info)
 
-    # Get links
-    def get_links(raw_text):
-        soup = BeautifulSoup(raw_text, "html.parser")
-        return [link.get("href") for link in soup.find_all("a") if link.get("href")]
 
-    # Get images
-    def get_images(rawText):
-        print("Getting images")
-        soup = BeautifulSoup(rawText, "html.parser")
-        images = [img.get("src") for img in soup.find_all("img")]
-        folder = "images"
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-        for img in images:
-            try:
-                print("Downloading image: " + img)
-                urllib.request.urlretrieve(
-                    img, os.path.join(folder, os.path.basename(img))
-                )
-                print("Downloaded: " + img)
-            except Exception as e:
-                print("Failed to save image: " + str(e))
-        print("Got images")
-        return images
+def get_emails(text_with_contact_info):
+    email_regex = re.compile(r"\w+[\w.]*\w+@\w+[\w.]*\w+")
+    return email_regex.findall(text_with_contact_info)
 
-    # Get phones
-    def get_phones(rawText):
-        phoneRegex = re.compile(r"""((\s|-|\.)?(\d{3})(\s|-|\.)?(\d{4}))""", re.VERBOSE)
-        return phoneRegex.findall(rawText)
 
-    # Get emails
-    def get_emails(rawText):
-        emailRegex = re.compile(r"""\w+[\w.]*\w+@\w+[\w.]*\w+""", re.VERBOSE)
-        return emailRegex.findall(rawText)
+def write_to_file(data, file_name):
+    random_name = f"{random.randint(1, 100)}_{file_name}"
+    results_dir = "results"
 
-    # Write data to files.
-    def write_to_file(data, file_name):
-        random_name = str(random.randint(1, 100)) + "_" + file_name
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
 
-        if not os.path.exists("results"):
-            os.makedirs("results")
-
-        with open("results/" + random_name, "w") as text_file:
+    try:
+        with open(os.path.join(results_dir, random_name), "w") as text_file:
             if data is not None:
                 for item in data:
-                    text_file.write(str(item) + "\n")
+                    text_file.write(f"{item}\n")
+    except Exception as e:
+        print(f"Failed to write to file: {e}")
+        return None
 
-        return random_name
+    return random_name
